@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Water Quest</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Water Quest</h1>
+    <p class="game-instructions">Collect water cans to fill your container. Each can fills 20%.</p>
+
+    <div class="controls">
+      <div class="stats">
+        <p>Cans Clicked: <span id="clicked-cans">0</span></p>
+        <p>Containers Filled: <span id="filled-cans">0</span></p>
+        <p>Time Left: <span id="timer">30</span>s</p>
+      </div>
+
+      <div class="settings">
+        <label>
+          <input type="checkbox" id="endless-toggle" />
+          Endless mode
+        </label>
+
+        <label>
+          Goal (%):
+          <input type="number" id="goal-percent" min="20" max="100" step="20" value="100" />
+        </label>
+
+        <button id="start-game">Start Game</button>
+        <button id="reset-game" style="display:none;">Reset</button>
+      </div>
+    </div>
+
+    <div id="achievements" class="achievement" aria-live="polite"></div>
+
+    <div class="game-and-container">
+      <div class="water-container" title="Your container">
+        <div class="water-level">
+          <div class="water-fill" style="height:0%"></div>
+        </div>
+        <div class="container-percent"><span id="container-percent">0%</span></div>
+      </div>
+
+      <div class="game-grid" aria-label="game grid"></div>
+    </div>
+
+    <div id="confetti-root" class="confetti-root" aria-hidden="true"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
