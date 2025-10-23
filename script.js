@@ -10,8 +10,10 @@ let goalPercent = 100;
 let endlessMode = false;
 let totalPercent = 0;          // accumulates percent across fills (used for goal checks)
 let goalReachedNotified = false; // whether we've already shown the goal reached message
-// chance to spawn a negative (red) jug — increased to make simultaneous red/blue likely
-const NEGATIVE_SPAWN_CHANCE = 0.4;
+// runtime spawn settings (adjusted by difficulty)
+let CURRENT_NEGATIVE_CHANCE = 0.4; // will be overridden by difficulty
+let CURRENT_SPAWN_COUNT = 1; // how many cans to try to spawn each tick
+let CURRENT_SPAWN_INTERVAL_MS = 600; // spawn tick interval (ms)
 
 // DOM references
 const gridEl = document.querySelector('.game-grid');
@@ -25,6 +27,7 @@ const startBtn = document.getElementById('start-game');
 const resetBtn = document.getElementById('reset-game');
 const endlessToggle = document.getElementById('endless-toggle');
 const goalInput = document.getElementById('goal-percent');
+const difficultySelect = document.getElementById('difficulty-select');
 const confettiRoot = document.getElementById('confetti-root');
 // Goal badge element (created dynamically)
 let goalBadgeEl = null;
@@ -86,17 +89,33 @@ function playWinSound() {
 }
 
 // Creates the 3x3 game grid where items will appear
-function createGrid() {
+// Creates the game grid where items will appear. Size is number of columns/rows (e.g. 3 for 3x3)
+function createGrid(size = 3) {
   gridEl.innerHTML = ''; // Clear any existing grid cells
-  for (let i = 0; i < 9; i++) {
+  // Set CSS grid columns dynamically and a sensible max-width so cells stay square-ish
+  gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+  // approximate per-cell width to keep layout stable
+  const perCell = 90; // px per cell (approx)
+  gridEl.style.maxWidth = (size * perCell) + 'px';
+  const total = size * size;
+  for (let i = 0; i < total; i++) {
     const cell = document.createElement('div');
     cell.className = 'grid-cell'; // Each cell represents a grid square
     gridEl.appendChild(cell);
   }
 }
 
-// Ensure the grid is created when the page loads
-createGrid();
+// Helper: map difficulty to grid size
+function getGridSizeForDifficulty(diff) {
+  if (!diff) return 4; // default normal
+  if (diff === 'easy') return 3;
+  if (diff === 'hard') return 5;
+  return 4; // normal
+}
+
+// Ensure the grid is created when the page loads using selected difficulty
+const initialDifficulty = (typeof difficultySelect !== 'undefined' && difficultySelect && difficultySelect.value) ? difficultySelect.value : 'normal';
+createGrid(getGridSizeForDifficulty(initialDifficulty));
 
 // Spawns a new item in a random grid cell
 function spawnWaterCan() {
@@ -112,7 +131,7 @@ function spawnWaterCan() {
   const wrapper = document.createElement('div');
   wrapper.className = 'water-can-wrapper';
   // decide whether this is a negative (red) jug
-  const negative = Math.random() < NEGATIVE_SPAWN_CHANCE;
+  const negative = Math.random() < CURRENT_NEGATIVE_CHANCE;
   wrapper.dataset.negative = negative ? '1' : '0';
   wrapper.innerHTML = `<div class="water-can${negative ? ' negative' : ''}" role="button" aria-label="water can"></div>`;
   // progress bar
@@ -156,6 +175,13 @@ function spawnWaterCan() {
       wrapper.remove();
     }
   }, CAN_LIFETIME_MS);
+}
+
+// Spawn tick: attempt to spawn CURRENT_SPAWN_COUNT cans each tick
+function spawnTick() {
+  for (let i = 0; i < CURRENT_SPAWN_COUNT; i++) {
+    spawnWaterCan();
+  }
 }
 
 // Collect a can: fill container percentally and update UI
@@ -230,7 +256,12 @@ function startGame() {
 
   // Read settings
   endlessMode = endlessToggle.checked;
-  goalPercent = parseInt(goalInput.value, 10) || 100;
+  // Determine goal based on difficulty mode (containers * 100). If endless mode is set, goal input is ignored.
+  const difficulty = (difficultySelect && difficultySelect.value) ? difficultySelect.value : 'normal';
+  const containersForDifficulty = (difficulty === 'easy') ? 1 : (difficulty === 'hard') ? 5 : 3;
+  goalPercent = containersForDifficulty * 100;
+  // reflect the goal in the input field for clarity (but keep it disabled in endless mode)
+  if (goalInput) goalInput.value = goalPercent;
   if (goalPercent < FILL_PER_CAN) goalPercent = FILL_PER_CAN;
 
   // Reset state
@@ -248,14 +279,27 @@ function startGame() {
     goalBadgeEl = null;
   }
   updateContainerUI();
-
-  createGrid();
+  // create grid sized for selected difficulty
+  const gridSize = getGridSizeForDifficulty(difficulty);
+  createGrid(gridSize);
   gameActive = true;
 
-  // Spawn water cans every second
-  spawnInterval = setInterval(spawnWaterCan, 600);
-  // Immediately spawn one
-  spawnWaterCan();
+  // Read difficulty and configure spawn parameters
+  // Default settings
+  const settings = {
+    easy: { interval: 900, count: 1, negative: 0.2 },
+    normal: { interval: 600, count: 1, negative: 0.4 },
+    hard: { interval: 350, count: 2, negative: 0.55 }
+  };
+  const cfg = settings[difficulty] || settings.normal;
+  CURRENT_SPAWN_INTERVAL_MS = cfg.interval;
+  CURRENT_SPAWN_COUNT = cfg.count;
+  CURRENT_NEGATIVE_CHANCE = cfg.negative;
+
+  // Spawn water cans on an interval using spawnTick
+  spawnInterval = setInterval(spawnTick, CURRENT_SPAWN_INTERVAL_MS);
+  // Immediately spawn according to current count
+  spawnTick();
 
   // Timer countdown
   timerInterval = setInterval(() => {
@@ -278,6 +322,7 @@ function startGame() {
   resetBtn.style.display = 'inline-block';
   goalInput.disabled = endlessMode;
   endlessToggle.disabled = true;
+  if (difficultySelect) difficultySelect.disabled = true;
 }
 
 // End the game and present message
@@ -297,6 +342,7 @@ function endGame(success, message) {
   resetBtn.style.display = 'inline-block';
   endlessToggle.disabled = false;
   goalInput.disabled = false;
+  if (difficultySelect) difficultySelect.disabled = false;
 }
 
 // Reset the game back to original state
@@ -316,11 +362,14 @@ function resetGame() {
   goalReachedNotified = false;
   totalPercent = 0;
   updateContainerUI();
-  createGrid();
+  // recreate grid at default/selected size on reset
+  const resetSize = getGridSizeForDifficulty((difficultySelect && difficultySelect.value) ? difficultySelect.value : 'normal');
+  createGrid(resetSize);
   startBtn.style.display = 'inline-block';
   resetBtn.style.display = 'none';
   endlessToggle.disabled = false;
   goalInput.disabled = false;
+  if (difficultySelect) difficultySelect.disabled = false;
   confettiRoot.innerHTML = '';
   if (goalBadgeEl) {
     goalBadgeEl.remove();
@@ -377,3 +426,12 @@ resetBtn.addEventListener('click', resetGame);
 endlessToggle.addEventListener('change', () => {
   goalInput.disabled = endlessToggle.checked;
 });
+
+// When difficulty changes and the game is not active, resize the grid immediately for preview
+if (difficultySelect) {
+  difficultySelect.addEventListener('change', () => {
+    if (!gameActive) {
+      createGrid(getGridSizeForDifficulty(difficultySelect.value));
+    }
+  });
+}

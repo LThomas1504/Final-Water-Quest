@@ -21,14 +21,26 @@ Fonts:
 :root {
   --color-yellow: #FFC907;
   --color-blue: #2E9DF7;
-  --color-light-blue: #8BD1CB;
-  --color-green: #4FCB53;
-  --color-orange: #FF902A;
-  --color-red: #F5402C;
-  --color-dark-green: #159A48;
-  --color-pink: #F16061;
-  --bg: #f0f0f0;
-  --muted: #e8e8e8;
+    /* Primary */
+    --color-yellow: #FFC907; /* provided */
+    --color-blue: #2E9DF7; /* provided */
+
+    /* Secondary */
+    --color-light-blue: #8BD1CB; /* provided */
+    --color-green: #4FCB53; /* provided */
+    --color-orange: #FF902A; /* provided */
+    --color-red: #F5402C; /* provided */
+    --color-dark-green: #159A48; /* provided */
+    --color-pink: #F16061; /* provided */
+
+    /* UI neutrals (kept soft to preserve contrast) */
+    --bg: #fbfbfc; /* slightly brighter background */
+    --muted: #f3f7f9; /* gentle muted tile background */
+    --card-bg: #ffffff;
+    --text: #14212a;
+  --accent: var(--color-yellow);
+  --outline: rgba(20,33,42,0.08);
+  --outline-strong: rgba(20,33,42,0.16);
 }
 
 * {
@@ -39,17 +51,17 @@ body {
   font-family: "Proxima Nova", Avenir, Arial, sans-serif;
   margin: 0;
   padding: 30px;
-  background-color: var(--bg);
-  color: #333;
+    background-color: var(--bg);
+    color: var(--text);
 }
 
 .container {
   max-width: 750px;
   margin: 50px auto;
-  background-color: #fff;
+  background: linear-gradient(180deg, #ffffff, #fffaf2);
   padding: 40px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgba(16, 24, 32, 0.06), 0 0 0 1px var(--outline);
 }
 
 h1 {
@@ -57,7 +69,7 @@ h1 {
   font-size: 30px;
   font-weight: bold;
   margin-bottom: 20px;
-  color: #333;
+    color: var(--color-yellow);
 }
 
 h1 img {
@@ -70,13 +82,14 @@ h1 img {
   font-size: 18px;
   margin-bottom: 30px;
   text-align: center;
+    color: #425d6a;
 }
 
 .stats {
   display: flex;
   justify-content: space-around;
   margin-bottom: 30px;
-  background-color: #f5f5f5;
+    background: linear-gradient(90deg, rgba(255,201,7,0.06), rgba(139,209,203,0.04));
   padding: 15px 0;
   border-radius: 8px;
 }
@@ -84,8 +97,8 @@ h1 img {
 .stats p {
   margin: 0;
   font-size: 18px;
-  font-weight: bold;
-  color: #333;
+    font-weight: 700;
+    color: var(--text);
 }
 
 .game-grid {
@@ -104,17 +117,38 @@ h1 img {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.28s, transform 120ms ease;
   position: relative;
   overflow: hidden;
+  /* subtle outer outline without affecting layout */
+  box-shadow: 0 0 0 1px var(--outline);
 }
 
+/* alternate subtle backgrounds to bring in more of the palette (yellow prominent) */
+.grid-cell:nth-child(3n+1) { background: linear-gradient(180deg, rgba(255,201,7,0.06), var(--muted)); }
+.grid-cell:nth-child(3n+2) { background: linear-gradient(180deg, rgba(46,157,247,0.04), var(--muted)); }
+.grid-cell:nth-child(3n+3) { background: linear-gradient(180deg, rgba(139,209,203,0.035), var(--muted)); }
+
 .grid-cell.has-can {
-  background-color: rgba(139,209,203,0.18); /* subtle light-blue highlight when a can is present */
+  background-color: rgba(255,201,7,0.09); /* more yellow when a can appears (accent) */
+  /* make outline slightly stronger when active */
+  box-shadow: 0 0 0 2px var(--outline-strong);
 }
 
 .grid-cell.negative-cell {
   background-color: rgba(245,64,44,0.06); /* subtle light-red highlight for negative jug */
+  box-shadow: 0 0 0 2px rgba(245,64,44,0.08);
+}
+
+/* focus styles for keyboard users */
+.grid-cell:focus-within, .grid-cell:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--outline-strong);
+}
+
+.water-can:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46,157,247,0.2);
 }
 
 /* small progress bar shown at bottom of a grid cell while a can is present */
@@ -124,21 +158,22 @@ h1 img {
   right: 6px;
   bottom: 6px;
   height: 6px;
-  background: rgba(0,0,0,0.08);
+    background: rgba(20,33,42,0.04);
   border-radius: 6px;
   overflow: hidden;
+  z-index: 30;
 }
 .cell-progress > i {
   display: block;
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--color-blue), var(--color-light-blue));
+  background: linear-gradient(90deg, var(--color-yellow), var(--color-blue));
   transition: width linear;
 }
 
 /* negative jug variant (red) */
 .water-can.negative {
-  filter: hue-rotate(-20deg) saturate(160%) brightness(90%);
+  filter: hue-rotate(-6deg) saturate(120%) brightness(94%);
   box-shadow: 0 4px 10px rgba(245,64,44,0.12) inset;
 }
 .cell-progress.negative > i { background: linear-gradient(90deg,#F5402C,#FF902A); }
@@ -148,9 +183,9 @@ h1 img {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70px;
-  height: 70px;
+  transform: translate(-50%, -62%); /* nudge slightly upward so progress bar remains visible */
+  width: 56px; /* smaller can */
+  height: 56px;
   /* Ensure the wrapper is properly centered */
 }
 
@@ -167,6 +202,9 @@ h1 img {
   transform-origin: center; /* Ensure scaling happens from the center */
 }
 
+/* Visual for the water fill inside the container */
+.water-fill { background: linear-gradient(180deg, var(--color-blue), var(--color-light-blue)); box-shadow: inset 0 4px 12px rgba(255,201,7,0.06); }
+
 @keyframes popUp {
   0% {
     transform: scale(0.5); /* Start scaling from the center */
@@ -178,7 +216,7 @@ h1 img {
 
 
 button {
-  background-color: var(--color-green);
+  background-color: var(--accent);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -187,20 +225,21 @@ button {
   cursor: pointer;
   display: block;
   margin: 30px auto 0;
-  transition: background-color 0.2s;
+  transition: background-color 0.18s ease;
 }
+button:hover { background-color: #e6b400; }
 
 /* Badge shown when reaching goal */
 .goal-badge {
   position: absolute;
   right: 18px;
   top: 18px;
-  background: linear-gradient(180deg, var(--color-yellow) 0%, var(--color-orange) 100%);
-  color: #14212a;
+  background: linear-gradient(180deg, var(--color-yellow) 0%, var(--color-orange) 85%);
+    color: var(--text);
   padding: 8px 12px;
   border-radius: 999px;
-  font-weight: 700;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    font-weight: 800;
+  box-shadow: 0 8px 26px rgba(20,33,42,0.06);
   transform: scale(0);
   transition: transform 300ms cubic-bezier(.2,.9,.3,1);
   z-index: 20;
@@ -219,8 +258,29 @@ button {
   opacity: 0.95;
   border-radius: 2px;
   animation: confetti-fall 3s cubic-bezier(.2,.6,.3,1) forwards;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .confetti-piece.large { width: 14px; height: 20px; border-radius: 3px; }
 .confetti-piece.small { width: 6px; height: 10px; border-radius: 2px; }
+/* confetti colors mapped to palette */
+.confetti-piece { background: var(--color-blue); }
+.confetti-piece:nth-child(2n) { background: var(--color-yellow); }
+.confetti-piece:nth-child(3n) { background: var(--color-pink); }
+.confetti-piece:nth-child(4n) { background: var(--color-green); }
+/* Make confetti feel more yellow-heavy by weighting first positions */
+.confetti-piece:nth-child(-n+6) { background: var(--color-yellow); }
+
+/* Footer linking to charity: water */
+.site-footer {
+  margin-top: 28px;
+  background: linear-gradient(180deg, rgba(46,157,247,0.03), rgba(139,209,203,0.02));
+  color: rgba(20,33,42,0.8);
+}
+.site-footer p { margin: 6px 0; font-size: 14px; color: rgba(20,33,42,0.75); }
+.site-footer a {
+  color: var(--color-blue);
+  text-decoration: none;
+  font-weight: 700;
+}
+.site-footer a:hover { color: var(--color-dark-green); text-decoration: underline; }

@@ -25,6 +25,15 @@
         </label>
 
         <label>
+          Difficulty:
+          <select id="difficulty-select">
+            <option value="normal" selected>Normal</option>
+            <option value="easy">Easy</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+
+        <label>
           Goal (%):
           <input type="number" id="goal-percent" min="20" max="100" step="20" value="100" />
         </label>
@@ -49,6 +58,17 @@
 
     <div id="confetti-root" class="confetti-root" aria-hidden="true"></div>
   </div>
+
+  <footer class="site-footer">
+    <div class="container" style="max-width:900px;padding:18px 40px;">
+      <p>Learn more or support the cause:</p>
+      <p>
+        <a href="https://www.charitywater.org/" target="_blank" rel="noopener noreferrer">charity: water — official site</a>
+        &nbsp;|&nbsp;
+        <a href="https://www.charitywater.org/donate" target="_blank" rel="noopener noreferrer">Donate to charity: water</a>
+      </p>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
 </body>
